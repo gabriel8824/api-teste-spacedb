@@ -141,10 +141,7 @@ app.post('/listar-tabelas', async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Tabelas listadas com sucesso',
-      data: {
-        tables
-      }
+      tables
     });
   } catch (error) {
     console.error('Erro ao listar as tabelas:', error);
