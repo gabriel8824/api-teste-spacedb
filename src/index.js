@@ -1,10 +1,35 @@
-const fs = require('fs');
 const express = require('express');
-const mysql = require('mysql2/promise');
+const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
 
 const app = express();
 app.use(express.json());
+
+// Função para criar uma conexão com o banco de dados
+async function createConnection(config) {
+  try {
+    const sequelize = new Sequelize(config.database, config.username, config.password, {
+      host: config.host,
+      dialect: config.dialect,
+      port: config.port,
+      logging: false,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        }
+      }
+    });
+
+    await sequelize.authenticate();
+    console.log('Conexão estabelecida com sucesso!');
+
+    return sequelize;
+  } catch (error) {
+    console.error('Erro ao conectar ao banco de dados:', error);
+    throw error;
+  }
+}
 
 // Rota POST para verificar a conexão com o banco de dados
 app.post('/verificar-conexao', async (req, res) => {
@@ -20,14 +45,7 @@ app.post('/verificar-conexao', async (req, res) => {
       dialect,
     });
 
-    // Verificar a conexão
-    await connection.ping();
-
-    console.log('Conexão estabelecida com sucesso!');
     res.json({ message: 'Conexão estabelecida com sucesso!' });
-
-    // Fechar a conexão com o banco de dados
-    await connection.end();
   } catch (error) {
     res.status(500).json({ error: 'Erro ao conectar ao banco de dados' });
   }
@@ -44,25 +62,31 @@ app.post('/criar-tabela', async (req, res) => {
       username,
       password,
       database,
-    };
+      dialect,
+    });
 
-    // Conectar ao banco de dados
-    const connection = await mysql.createConnection(dbConfig);
+    const sequelize = connection;
 
-    // Comando SQL para criar a tabela
-    const createTableSQL = `
-    CREATE TABLE IF NOT EXISTS ${tableName} (
-      id INT PRIMARY KEY AUTO_INCREMENT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )
-  `;
+    const model = sequelize.define(tableName, {
+      id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+      },
+      created_at: {
+        type: DataTypes.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+      }
+    }, {
+      tableName,
+      timestamps: false
+    });
 
-    // Executar o comando SQL
-    await connection.execute(createTableSQL);
-
-    // Fechar a conexão com o banco de dados
-    await connection.end();
+    await model.sync();
 
     res.json({ message: 'Tabela criada com sucesso!' });
   } catch (error) {
@@ -83,19 +107,12 @@ app.delete('/deletar-tabela/:tableName', async (req, res) => {
       username,
       password,
       database,
-    };
+      dialect,
+    });
 
-    // Conectar ao banco de dados
-    const connection = await mysql.createConnection(dbConfig);
+    const sequelize = connection;
 
-    // Comando SQL para deletar a tabela
-    const deleteTableSQL = `DROP TABLE IF EXISTS ${tableName}`;
-
-    // Executar o comando SQL
-    await connection.execute(deleteTableSQL);
-
-    // Fechar a conexão com o banco de dados
-    await connection.end();
+    await sequelize.query(`DROP TABLE IF EXISTS ${tableName}`);
 
     res.json({ message: 'Tabela deletada com sucesso!' });
   } catch (error) {
@@ -115,22 +132,12 @@ app.get('/listar-tabelas', async (req, res) => {
       username,
       password,
       database,
-    };
+      dialect,
+    });
 
-    // Conectar ao banco de dados
-    const connection = await mysql.createConnection(dbConfig);
+    const sequelize = connection;
 
-    // Comando SQL para listar todas as tabelas do banco de dados
-    const listTablesSQL = `SELECT table_name FROM information_schema.tables WHERE table_schema = '${database}'`;
-
-    // Executar o comando SQL
-    const [rows] = await connection.execute(listTablesSQL);
-
-    // Fechar a conexão com o banco de dados
-    await connection.end();
-
-    // Extrair o nome das tabelas da resposta do banco de dados
-    const tables = rows.map(row => row.table_name);
+    const tables = await sequelize.showAllSchemas();
 
     res.json({ tables });
   } catch (error) {
