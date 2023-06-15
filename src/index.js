@@ -139,10 +139,19 @@ app.post('/listar-tabelas', async (req, res) => {
 
     const tables = await sequelize.showAllSchemas();
 
-    res.json({ tables });
+    res.json({
+      success: true,
+      message: 'Tabelas listadas com sucesso',
+      data: {
+        tables
+      }
+    });
   } catch (error) {
     console.error('Erro ao listar as tabelas:', error);
-    res.status(500).json({ error: 'Erro ao listar as tabelas' });
+    res.status(500).json({
+      success: false,
+      error: 'Erro ao listar as tabelas'
+    });
   }
 });
 
