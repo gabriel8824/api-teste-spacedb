@@ -135,9 +135,9 @@ app.post('/listar-tabelas', async (req, res) => {
       dialect,
     });
 
-    const [results] = await connection.query(`SELECT table_name FROM information_schema.tables WHERE table_schema = '${database}'`);
+    const [results] = await connection.query(`SHOW TABLES`);
 
-    const tableNames = results.map(result => result.table_name);
+    const tableNames = results.map(result => Object.values(result)[0]);
 
     res.json({
       success: true,
