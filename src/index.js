@@ -95,8 +95,8 @@ app.post('/criar-tabela', async (req, res) => {
   }
 });
 
-// Rota DELETE para deletar uma tabela
-app.delete('/deletar-tabela/:tableName', async (req, res) => {
+// Rota POST para deletar uma tabela
+app.post('/deletar-tabela/:tableName', async (req, res) => {
   try {
     const { host, port, username, password, database, dialect } = req.body;
     const tableName = req.params.tableName;
@@ -112,12 +112,13 @@ app.delete('/deletar-tabela/:tableName', async (req, res) => {
 
     const sequelize = connection;
 
-    await sequelize.query(`DROP TABLE IF EXISTS ${tableName}`);
+    // Executa a consulta para deletar a tabela
+    await sequelize.query(`DROP TABLE IF EXISTS \`${tableName}\``);
 
-    res.json({ message: 'Tabela deletada com sucesso!' });
+    res.json({ success: true, message: 'Tabela deletada com sucesso!' });
   } catch (error) {
     console.error('Erro ao deletar a tabela:', error);
-    res.status(500).json({ error: 'Erro ao deletar a tabela' });
+    res.status(500).json({ success: false, error: 'Erro ao deletar a tabela' });
   }
 });
 
