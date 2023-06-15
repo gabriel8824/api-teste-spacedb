@@ -1,3 +1,4 @@
+const fs = require('fs');
 const express = require('express');
 const mysql = require('mysql2');
 require('dotenv').config();
@@ -8,7 +9,17 @@ app.use(express.json());
 // Função para criar uma conexão com o banco de dados
 function createConnection(config) {
   return new Promise((resolve, reject) => {
-    const connection = mysql.createConnection(config);
+    const connection = mysql.createConnection({
+      host: config.host,
+      user: config.user,
+      password: config.password,
+      database: config.database,
+      ssl: {
+        ca: fs.readFileSync('path/to/ca.pem'), // Caminho para o arquivo de certificado CA
+        cert: fs.readFileSync('path/to/cert.pem'), // Caminho para o arquivo de certificado do cliente
+        key: fs.readFileSync('path/to/key.pem'), // Caminho para o arquivo de chave do cliente
+      },
+    });
 
     connection.connect((err) => {
       if (err) {
