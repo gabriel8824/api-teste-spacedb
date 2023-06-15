@@ -138,10 +138,11 @@ app.post('/listar-tabelas', async (req, res) => {
     const sequelize = connection;
 
     const tables = await sequelize.showAllSchemas();
+    const tableNames = tables.map(table => table.tableName);
 
     res.json({
       success: true,
-      tables
+      tables: tableNames
     });
   } catch (error) {
     console.error('Erro ao listar as tabelas:', error);
@@ -151,6 +152,7 @@ app.post('/listar-tabelas', async (req, res) => {
     });
   }
 });
+
 
 app.listen(3333, () => {
   console.log('Servidor rodando na porta 3333');
