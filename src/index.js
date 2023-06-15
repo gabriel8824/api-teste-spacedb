@@ -135,10 +135,9 @@ app.post('/listar-tabelas', async (req, res) => {
       dialect,
     });
 
-    const sequelize = connection;
+    const [results] = await connection.query(`SELECT table_name FROM information_schema.tables WHERE table_schema = '${database}'`);
 
-    const tables = await sequelize.showAllSchemas();
-    const tableNames = tables.map(table => table.tableName);
+    const tableNames = results.map(result => result.table_name);
 
     res.json({
       success: true,
@@ -152,7 +151,6 @@ app.post('/listar-tabelas', async (req, res) => {
     });
   }
 });
-
 
 app.listen(3333, () => {
   console.log('Servidor rodando na porta 3333');
