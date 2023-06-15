@@ -121,8 +121,8 @@ app.delete('/deletar-tabela/:tableName', async (req, res) => {
   }
 });
 
-// Rota GET para listar todas as tabelas
-app.get('/listar-tabelas', async (req, res) => {
+// Rota POST para listar todas as tabelas
+app.post('/listar-tabelas', async (req, res) => {
   try {
     const { host, port, username, password, database, dialect } = req.body;
 
